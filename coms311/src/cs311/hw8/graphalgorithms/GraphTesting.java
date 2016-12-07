@@ -4,6 +4,9 @@ import java.util.List;
 
 import cs311.hw8.graph.Graph;
 import cs311.hw8.graph.IGraph.Edge;
+import cs311.hw8.graph.IGraph.Vertex;
+import cs311.hw8.graphalgorithms.OSMMap.Location;
+import cs311.hw8.graphalgorithms.OSMMap.Way;
 
 public class GraphTesting<V,E extends IWeight>{
 
@@ -38,8 +41,8 @@ public class GraphTesting<V,E extends IWeight>{
 		
 		OSMMap t = new OSMMap();
 		t.parse("AmesMap.txt");
-		
-		
+		List<Edge<Way>> t1 = t.map.getEdges();
+		System.out.println(t.TotalDistance());
 		/*List<Edge<Weight>> eList = GraphAlgorithms.ShortestPath(test, "0", "8");
 		for(int i = 0; i < eList.size(); i++){
 			Edge<Weight> e = eList.get(i);
