@@ -27,11 +27,11 @@ public class OSMMap{
 	public IGraph<Location, Way> map;
 	
 	public <V extends Location, E extends Way> OSMMap(){
-		IGraph<V, E> map = new JimGraph<V, E>();
+		map = (IGraph<Location, Way>) new JimGraph<V, E>();
 		map.setDirectedGraph();
 	}
 	
-	public void parse(String fileName){
+	public <V extends Location, E extends Way> void parse(String fileName){
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = null;
 		File file = new File(fileName);
@@ -65,7 +65,8 @@ public class OSMMap{
 			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 	               Element eElement = (Element) nNode;
 	               Location v = new Location(new Double(eElement.getAttribute("lat")), new Double(eElement.getAttribute("lon")));
-	               map.addVertex(eElement.getAttribute("id"), v);
+	               String id = eElement.getAttribute("id");
+	               map.addVertex(id, v);
 			}
 		}
 		for (int temp = 0; temp < wLength; temp++) {
