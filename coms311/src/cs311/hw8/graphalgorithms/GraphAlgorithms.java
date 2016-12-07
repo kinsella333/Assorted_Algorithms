@@ -16,107 +16,99 @@ import java.util.Stack;
 
 public class GraphAlgorithms{
 	
+	/**
+	 * Using dijksta's algorithm this function creates an mst of the given graph g and 
+	 * records each node's previous neighbor. The function then iterates over the previous 
+	 * vertices, recording the edges between the two until we reach the starting vertex.
+	 * 
+	 * @param g given graph to find shortest path in
+	 * @param vertexStart vertex to start at
+	 * @param vertexEnd vertex to end at 
+	 * @return List of edges representing shortest path
+	 */
 	public static <V, E extends IWeight> List<Edge<E>> ShortestPath(
 			IGraph<V, E> g, String vertexStart, String vertexEnd){
-		List<Edge<E>> eList = g.getEdges();
+		
 		//Verify g is undirected Dijkstra's, and no edge is negative
+		List<Edge<E>> eList = g.getEdges();
     	try{
     		checkErrors(g, 2);
     		if(!checkEdgeData(eList, true)){
 	        	throw new IllegalArgumentException("Graph contains null edge data");
 	        }
+    		if(g.getVertex(vertexStart) == null || g.getVertex(vertexEnd) == null){
+    			throw new IllegalArgumentException("Vertex does not exist");
+    		}
     	}catch(Exception e){
     		e.printStackTrace(System.err);
+    		return null;
     	}
     	
 		List<Vertex<V>> vList = g.getVertices();
 		int size = vList.size();
+		int previous[] = new int[size];
 		boolean included[] = new boolean[size];
 		Weight distances[]  = new Weight[size];
-		Edge<E> e = null, tempE = null;
-		List<Edge<E>> sptEdges = new ArrayList<Edge<E>>();
-		Graph<V,E> graph = new Graph<V,E>();
+		List<Edge<E>> shortestPath = new ArrayList<Edge<E>>();
+		Edge<E> e = null;
 		
+		//Fill distances with max doubles and previous with -1 "null" value
 		for(int i = 0; i < size; i++){
 			distances[i] = new Weight(Double.MAX_VALUE);
-			graph.addVertex(vList.get(i).getVertexName());
-			sptEdges.add(null);
+			previous[i] = -1;
 		}
+		
+		//Get the starting vertex index and set the distance to that vertex to 0
 		distances[vList.indexOf(g.getVertex(vertexStart))] = new Weight(0);
 		
 		for(int i = 0; i < size-1; i++){
-			
+			//Find the index of the min distance vertex out of the available neighbors and record the inclusion of that vertex
 			int minIndex = findMinDistance(distances, size, included);
 			included[minIndex] = true;
 			
-			
+			//loop through all vertices to find the lowest weight edge and add it to the current distance and store the value at the index of the 
+			//vertex in the distances array, and record the previous node in the mst.
 			for(int k = 0; k < size; k++){
 				e = g.getEdge(vList.get(minIndex).getVertexName(), vList.get(k).getVertexName());
 				if(e != null){
 					if(!included[k] && distances[minIndex].getWeight() != Double.MAX_VALUE 
 							&& distances[minIndex].getWeight() + e.getEdgeData().getWeight() < distances[k].getWeight()){
 						distances[k] = new Weight(distances[minIndex].getWeight() + e.getEdgeData().getWeight());
-						sptEdges.set(k-1,e);
+						previous[k] = minIndex;
 					}
 				}
 			}
 		}
 		
-		for(int i = 0; i < size-1; i++){
-			tempE = sptEdges.get(i);
-			graph.addEdge(tempE.getVertexName1(), tempE.getVertexName2(), tempE.getEdgeData());
-		
-		}
-		
-		return DFS(vertexStart, vertexEnd, graph);
-	}
-	
-	private static <V,E>  List<Edge<E>> DFS(String vertexStart, String vertexEnd, Graph<V, E> graph){
-		List<String> vertexNames = new ArrayList<String>();
-		List<Vertex<V>> vList = graph.getVertices(), nList;
-		boolean visited[] = new boolean[vList.size()];
-		Stack<String> s = new Stack<String>();
-		List<Edge<E>> shortestPath = new ArrayList<Edge<E>>();
-		String current, previous = null;
-		int index = 0;
-		Vertex<V> temp;
-		
-		for(int i = 0; i < vList.size(); i++){
-			vertexNames.add(vList.get(i).getVertexName());
-		}
-		s.push(vertexStart);
-		
-		while(!s.isEmpty()){
-			current = s.pop();
-			index = vertexNames.indexOf(current);
-			
-			if(!visited[index]){
-				visited[index] = true;
-				if(previous != null){
-					shortestPath.add(graph.getEdge(previous, current));
-				}
-				if(current.equals(vertexEnd)){
-					break;
-				}
+		//get the index of the vertexEnd and vertexStart vertices, then loop through the previous array recording the edges between vertices in the shortestPath list
+		//If the value at previous[currentIndex] is -1 we know that there is not path connecting the two vertices.
+		int currentIndex = vList.indexOf(g.getVertex(vertexEnd)), startI = vList.indexOf(g.getVertex(vertexStart));
+		while(currentIndex != startI){
+			if(previous[currentIndex] == -1){
+				throw new IllegalArgumentException("No Path Exists");
 			}
-			
-			nList = graph.getNeighbors(current);
-			for(int i = 0; i < nList.size(); i++){
-				temp = nList.get(i);
-				if(!visited[vList.indexOf(temp)]){
-					s.push(temp.getVertexName());
-				}
-			}
-			previous = current;
+			shortestPath.add(g.getEdge(vList.get(previous[currentIndex]).getVertexName(), vList.get(currentIndex).getVertexName()));
+			//set the working index to be the previous index in the mst.
+			currentIndex = previous[currentIndex];
 		}
+		//Since the edges are stored in reverse in the preceding while loop, we need to reverse the edge order.
+		Collections.reverse(shortestPath);
 		return shortestPath;
 	}
 	
-
+	/**
+	 * Finds the minimum distance in the given weight array.
+	 * 
+	 * @param distances distances of the node from the origin.
+	 * @param size number of vertices.
+	 * @param included boolean array recording what nodes have been added.
+	 * @return
+	 */
 	private static <V,E> int findMinDistance(Weight[] distances, int size, boolean[] included){
 		int minIndex = -1;
 		Weight minW = new Weight(Double.MAX_VALUE);
 		
+		//Loop through the distances array, recording the minimum value that is not included and saving the index.
 		for (int i = 0; i < size; i++){
             if (included[i] == false && distances[i].getWeight() <= minW.getWeight()){
                 minW = distances[i];
@@ -126,7 +118,6 @@ public class GraphAlgorithms{
 		
 		return minIndex;
 	}
-	
 	
 	
 	/**
@@ -465,7 +456,7 @@ public class GraphAlgorithms{
 		case 2:
 			 if(g.isDirectedGraph()){
 		        throw new IllegalArgumentException("Graph is Directed");
-	        }
+	         }
 	        return;
 		}
     }

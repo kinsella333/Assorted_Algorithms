@@ -4,9 +4,6 @@ import java.util.List;
 
 import cs311.hw8.graph.Graph;
 import cs311.hw8.graph.IGraph.Edge;
-import cs311.hw8.graph.IGraph.NoSuchEdgeException;
-import cs311.hw8.graph.IGraph.NoSuchVertexException;
-import cs311.hw8.graph.IGraph.Vertex;
 
 public class GraphTesting<V,E extends IWeight>{
 
@@ -39,12 +36,16 @@ public class GraphTesting<V,E extends IWeight>{
 		test.addEdge("3", "4", new Weight(9));
 		test.addEdge("5", "4", new Weight(10));
 		
-		List<Edge<Weight>> eList = GraphAlgorithms.ShortestPath(test, "0", "2");
+		OSMMap t = new OSMMap();
+		t.parse("AmesMap.txt");
+		
+		
+		/*List<Edge<Weight>> eList = GraphAlgorithms.ShortestPath(test, "0", "8");
 		for(int i = 0; i < eList.size(); i++){
 			Edge<Weight> e = eList.get(i);
 			System.out.println("V1: " + e.getVertexName1() + " V2: " + e.getVertexName2()
 			+ " EW: " + e.getEdgeData().getWeight());
-		}
+		}*/
 		
 		/*List<List<Vertex<String>>> topList = GraphAlgorithms.AllTopologicalSort(test);
 		List<Vertex<String>> topS = GraphAlgorithms.TopologicalSort(test);
