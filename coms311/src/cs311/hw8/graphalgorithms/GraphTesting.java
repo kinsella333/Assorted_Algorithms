@@ -41,7 +41,7 @@ public class GraphTesting<V,E extends IWeight>{
 		
 		OSMMap t = new OSMMap();
 		t.parse("AmesMap.txt");
-		List<Edge<Way>> t1 = t.map.getEdges();
+		//List<Edge<Way>> t1 = t;
 		System.out.println(t.TotalDistance());
 		/*List<Edge<Weight>> eList = GraphAlgorithms.ShortestPath(test, "0", "8");
 		for(int i = 0; i < eList.size(); i++){

@@ -4,6 +4,8 @@ import cs311.hw8.graph.Graph;
 import cs311.hw8.graph.IGraph;
 import cs311.hw8.graph.IGraph.Edge;
 import cs311.hw8.graph.IGraph.Vertex;
+import cs311.hw8.graphalgorithms.OSMMap.Location;
+import cs311.hw8.graphalgorithms.OSMMap.Way;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,16 +28,24 @@ public class GraphAlgorithms{
 	 * @param vertexEnd vertex to end at 
 	 * @return List of edges representing shortest path
 	 */
-	public static <V, E extends IWeight> List<Edge<E>> ShortestPath(
+	public static <V, E extends Way> List<Edge<E>> ShortestPath(
 			IGraph<V, E> g, String vertexStart, String vertexEnd){
 		
 		//Verify g is undirected Dijkstra's, and no edge is negative
 		List<Edge<E>> eList = g.getEdges();
     	try{
     		checkErrors(g, 2);
-    		if(!checkEdgeData(eList, true)){
-	        	throw new IllegalArgumentException("Graph contains null edge data");
-	        }
+    		for(int i = 0; i < eList.size(); i++){
+        		if(eList.get(i).getEdgeData() == null){
+        			throw new IllegalArgumentException("Contains null edgeData");
+        		}
+        	}
+        	for(int i = 0; i < eList.size(); i++){
+            	if(eList.get(i).getEdgeData().getDistance() < 0){
+            		throw new IllegalArgumentException("Contains negative Distance");
+            	}
+            }
+        
     		if(g.getVertex(vertexStart) == null || g.getVertex(vertexEnd) == null){
     			throw new IllegalArgumentException("Vertex does not exist");
     		}
@@ -72,8 +82,8 @@ public class GraphAlgorithms{
 				e = g.getEdge(vList.get(minIndex).getVertexName(), vList.get(k).getVertexName());
 				if(e != null){
 					if(!included[k] && distances[minIndex].getWeight() != Double.MAX_VALUE 
-							&& distances[minIndex].getWeight() + e.getEdgeData().getWeight() < distances[k].getWeight()){
-						distances[k] = new Weight(distances[minIndex].getWeight() + e.getEdgeData().getWeight());
+							&& distances[minIndex].getWeight() + e.getEdgeData().getDistance() < distances[k].getWeight()){
+						distances[k] = new Weight(distances[minIndex].getWeight() + e.getEdgeData().getDistance());
 						previous[k] = minIndex;
 					}
 				}

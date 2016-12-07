@@ -5,7 +5,9 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import cs311.hw8.graph.JimGraph;
+import cs311.hw8.graph.IGraph;
 import cs311.hw8.graph.IGraph.Edge;
+import cs311.hw8.graph.IGraph.Vertex;
 import cs311.hw8.graphalgorithms.OSMMap.Way;
 
 import java.io.File;
@@ -15,16 +17,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.*;
 
-public class OSMMap {
+public class OSMMap{
 	
-	public JimGraph<Location, Way> map;
+	public IGraph<Location, Way> map;
 	
-	public OSMMap(){
-		map = new JimGraph<Location, Way>();
+	public <V extends Location, E extends Way> OSMMap(){
+		IGraph<V, E> map = new JimGraph<V, E>();
 		map.setDirectedGraph();
 	}
 	
@@ -61,7 +64,8 @@ public class OSMMap {
 			
 			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 	               Element eElement = (Element) nNode;
-	               map.addVertex(eElement.getAttribute("id"), new Location(new Double(eElement.getAttribute("lat")), new Double(eElement.getAttribute("lon"))));
+	               Location v = new Location(new Double(eElement.getAttribute("lat")), new Double(eElement.getAttribute("lon")));
+	               map.addVertex(eElement.getAttribute("id"), v);
 			}
 		}
 		for (int temp = 0; temp < wLength; temp++) {
@@ -102,8 +106,8 @@ public class OSMMap {
 	            	   }
 	            	   
 	            	   for (int j = 0; j < vertices.length-1; j++) {
-	            		   Location loc1 = map.getVertexData(vertices[j]);
-	            		   Location loc2 = map.getVertexData(vertices[j+1]);
+	            		   Location loc1 = (Location) map.getVertexData(vertices[j]);
+	            		   Location loc2 = (Location) map.getVertexData(vertices[j+1]);
 	            		   double dist = getDistance(loc1.getLatitude(), loc1.getLongitude(), loc2.getLatitude(), loc2.getLongitude());
 	            		   
 	            		   if(oneway){
@@ -120,7 +124,7 @@ public class OSMMap {
 	}
 	
 	
-	public double TotalDistance(){
+	public <E extends Way> double TotalDistance(){
 		double dist = 0;
 		System.out.println(map.getEdges().size());
 		List<Edge<Way>> t1 = map.getEdges();
@@ -137,8 +141,14 @@ public class OSMMap {
 		
 	}
 
-	public List<String> shortestRoute(){
-		return null;
+	public List<String> shortestRoute(String v1, String v2){
+		List<Edge<Way>> eList = GraphAlgorithms.ShortestPath(this.map, v1, v2);
+		List<String> sList = new ArrayList<String>();
+		int size = eList.size();
+		for(int i = 0; i < size; i++){
+			sList.add(eList.get(i).getEdgeData().getName());
+		}
+		return sList;
 		
 	}
 	
@@ -158,6 +168,7 @@ public class OSMMap {
 	
 	public static class Location{
 		private double latitude, longitude;
+		
 		public Location(double latitude, double longitude){
 			this.latitude = latitude;
 			this.longitude = longitude;
