@@ -50,7 +50,12 @@ public class JimGraph<V, E> implements IGraph<V, E>
           while (iter.hasNext())
           {
               Edge<E> ed = iter.next();
-              setEdgeData(ed.getVertexName1(), ed.getVertexName2(), null);
+              try {
+				setEdgeData(ed.getVertexName1(), ed.getVertexName2(), null);
+			} catch (cs311.hw8.graph.IGraph.NoSuchVertexException | cs311.hw8.graph.IGraph.NoSuchEdgeException e) {
+				
+				e.printStackTrace();
+			}
               if (!isEdge(ed.getVertexName2(), ed.getVertexName1() ))
               {
                   addEdge(ed.getVertexName1(), ed.getVertexName2());

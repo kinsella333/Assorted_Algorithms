@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.xml.parsers.*;
 
@@ -41,13 +42,54 @@ public class OSMMap <V,E> {
 	}
 	
 	/**
+	 * Main Method for executing given arg text files.
+	 * @param args MapFile.txt Routes.txt
+	 */
+	public static void main(String[] args) {
+		OSMMap<Location,Way> t = new OSMMap<Location, Way>();
+		List<Location> locList = new ArrayList<Location>();
+		List<String> path = new ArrayList<String>(), pathSn = new ArrayList<String>();
+		double time = System.currentTimeMillis();
+		
+		//Grab the MapFile
+		String check = t.parse(args[0]);
+		if(!check.equals(""))System.err.println(check);
+		
+		//Get route file
+		File file = new File(args[1]);
+		Scanner in;
+		try {
+			in = new Scanner(file);
+		} catch (FileNotFoundException e) {
+			System.err.println(e);
+			return;
+		}
+		
+		//Get each Location coords and add to list
+		while(in.hasNextLine())locList.add(new Location(in.nextDouble(), in.nextDouble()));
+		
+		//Loop through, collecting shortest route and print all the path's street routes 
+		for(int i = 0; i < locList.size() - 1; i++){
+			path = t.ShortestRoute(locList.get(i), locList.get(i+1));
+			pathSn = t.StreetRoute(path);
+			System.out.println("Begin Route: " + i + "\nStarting Node: " + path.get(0));
+			for(int j = 0; j < pathSn.size(); j++){
+				System.out.println("Road: " + pathSn.get(j));
+			}
+			System.out.println("Ending Node: " + path.get(path.size() -1) + "\n");
+		}
+		in.close();
+		System.out.println((System.currentTimeMillis() - time)/1000.0);
+	}
+	
+	/**
 	 * Parser Function, which takes the filename as an argument. This function parses the 
 	 * XML document and generates a graph from the Nodes contained there-in.
 	 * Node that have element tag node and attribute, id, are added as vertices, and nodes with element tag 
 	 * ways and attribute k with value highway and a name are added as edges.
 	 * @param fileName
 	 */
-	public void parse(String fileName){
+	public String parse(String fileName){
 		//Document set up and conversion to UTF-8 format
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = null;
@@ -61,13 +103,13 @@ public class OSMMap <V,E> {
 			builder = factory.newDocumentBuilder();
 			doc = builder.parse(is);
 		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
+			return e1.toString();
 		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
+			return e.toString();
 		} catch (SAXException e) {
-			e.printStackTrace();
+			return e.toString();
 		} catch (IOException e) {
-			e.printStackTrace();
+			return e.toString();
 		}
 		
 		//As long as doc can be added to program, we normalize the contents.
@@ -154,6 +196,7 @@ public class OSMMap <V,E> {
 	               }
 			}
 		}
+		return "";
 	}
 	
 	/**
@@ -162,7 +205,6 @@ public class OSMMap <V,E> {
 	 */
 	public double TotalDistance(){
 		double dist = 0;
-		System.out.println(map.getEdges().size());
 		List<Edge<Way>> t1 = map.getEdges();
 		
 		//Loop and add edge weight to total

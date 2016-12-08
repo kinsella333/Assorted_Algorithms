@@ -10,7 +10,7 @@ import cs311.hw8.graphalgorithms.OSMMap.Way;
 
 public class GraphTesting<V,E extends IWeight>{
 
-	public static void main(String[] args){
+	/*public static void main(String[] args){
 		Graph<String,Weight> test = new Graph<String,Weight>();
 		test.setDirectedGraph();
 		
@@ -48,12 +48,12 @@ public class GraphTesting<V,E extends IWeight>{
 		//System.out.println(t.TotalDistance());
 		List<String> t1 = t.ShortestRoute(new OSMMap.Location(42.023354, -93.668641),
 			new OSMMap.Location(42.028598, -93.651174));
-		/*for(int i = 0; i < eList.size(); i++){
+		for(int i = 0; i < eList.size(); i++){
 			Edge<Way> e = eList.get(i);
 			if(e.getEdgeData().getName().equals("Marshall Avenue")){
 				System.out.println(e.getEdgeData().getName());
 			}
-		}*/
+		}
 		
 		List<String> streets = t.StreetRoute(t1);
 		for(int i = 0; i < streets.size(); i++){
@@ -65,7 +65,7 @@ public class GraphTesting<V,E extends IWeight>{
 			System.out.println("Road: " + road);
 		}
 		
-		/*
+		
 		
 		 Graph<Integer, Weight> g = new Graph();
 	        g.setDirectedGraph();
@@ -140,16 +140,16 @@ public class GraphTesting<V,E extends IWeight>{
 				+ ") Weight: " + e.getEdgeData().getWeight());
 				w += e.getEdgeData().getWeight();
 			}
-	        System.out.println("Total: " + w);*/
-	        /*
+	        System.out.println("Total: " + w);
+	        
 		List<Edge<Weight>> eList = GraphAlgorithms.ShortestPath(test, "0", "8");
 		for(int i = 0; i < eList.size(); i++){
 			Edge<Weight> e = eList.get(i);
 			System.out.println("V1: " + e.getVertexName1() + " V2: " + e.getVertexName2()
 			+ " EW: " + e.getEdgeData().getWeight());
 		}
-		*/
-		/*List<List<Vertex<String>>> topList = GraphAlgorithms.AllTopologicalSort(test);
+		
+		List<List<Vertex<String>>> topList = GraphAlgorithms.AllTopologicalSort(test);
 		List<Vertex<String>> topS = GraphAlgorithms.TopologicalSort(test);
 		
 		for(int i = 0; i < topS.size(); i++){
@@ -161,10 +161,10 @@ public class GraphTesting<V,E extends IWeight>{
 				System.out.print(topList.get(i).get(k).getVertexName() + ", ");
 			}
 			System.out.println();
-		}*/
+		}
 		
 		
-		/*//test.setDirectedGraph();
+		//test.setDirectedGraph();
 		//test.addEdge("FUCK", "Hi");
 		try {
 			test.setEdgeData("Hi", "FUCK", 2);
@@ -195,7 +195,7 @@ public class GraphTesting<V,E extends IWeight>{
 		for(int i = 0; i < nList.size(); i++){
 			System.out.print(nList.get(i).getVertexName() + ", ");
 		}
-		System.out.print("]\n");*/
+		System.out.print("]\n");
 	}
-
+*/
 }

@@ -46,8 +46,10 @@ public class GraphAlgorithms{
     		return null;
     	}
     	
-		List<Vertex<V>> vList = g.getVertices(), q = new ArrayList<Vertex<V>>();
+		List<Vertex<V>> vList = g.getVertices();
 		List<String> vNames = new ArrayList<String>();
+		List<Integer> known = new ArrayList<Integer>();
+		
 		int size = vList.size();
 		int previous[] = new int[size];
 		boolean included[] = new boolean[size];
@@ -59,41 +61,46 @@ public class GraphAlgorithms{
 			distances[i] = new Weight(Double.MAX_VALUE);
 			previous[i] = -1;
 			Vertex<V> t = vList.get(i);
-			q.add(t);
 			vNames.add(t.getVertexName());
 		}
 		
 		//Get the starting vertex index and set the distance to that vertex to 0
-		distances[vList.indexOf(g.getVertex(vertexStart))] = new Weight(0);
-		int index, counter = size, test = 0;
+		int index = vList.indexOf(g.getVertex(vertexStart)), counter = size;
+		distances[index] = new Weight(0);
+		known.add(index);
 		
-		
+		//While there are nodes that haven't been visited or we have visited all nodes in
+		//subtree we loop
 		while(counter > 0){
-			index = findMinDistance(distances, size, included);
+			//find the index of the node with the smallest index
+			index = findMinDistance(distances, known, included);
 			if(index == -1){
 				counter = 0; 
 				break;
 			}
+			//Get the name of the index
 			String v = vNames.get(index);
 			if(v.equals(vertexEnd))break;
-	
+			
+			//Mark it as included, and get its neighbors
 			included[index] = true;
 			List<Vertex<V>> nList = g.getNeighbors(v);
 			int nSize = nList.size();
 			
+			//Loop through neighbors adding to the distance
 			for(int k = 0; k < nSize; k++){
 				double alt = distances[index].getWeight() + g.getEdge(v, nList.get(k).getVertexName()).getEdgeData().getWeight();
 				int nIndex = vList.indexOf(nList.get(k));
 				
 				if(alt < distances[nIndex].getWeight()){
+					//keep track of total distance and have a trail of previous nodes visited.
 					distances[nIndex] = new Weight(alt);
 					previous[nIndex] = index;
-					test++;
+					known.add(nIndex);
 				}
 			}
 			counter--;
 		}
-		System.out.println(test);
 		//Additional path verification, if final Vertex is never found throw error.
 		if(counter == 0){
 			throw new IllegalArgumentException ("No Path Exists (Counter)");
@@ -122,18 +129,18 @@ public class GraphAlgorithms{
 	 * @param included boolean array recording what nodes have been added.
 	 * @return
 	 */
-	private static <V,E> int findMinDistance(Weight[] distances, int size, boolean included[]){
+	private static <V,E> int findMinDistance(Weight[] distances, List<Integer> known, boolean included[]){
 		int minIndex = -1;
 		Weight minW = new Weight(Double.MAX_VALUE);
 		
 		//Loop through the distances array, recording the minimum value that is not included and saving the index.
-		for (int i = 0; i < size; i++){
-            if (!included[i] && distances[i].getWeight() < minW.getWeight()){
-                minW = distances[i];
-                minIndex = i;
+		for (int i = 0; i < known.size(); i++){
+			int index = known.get(i);
+            if (!included[index] && distances[index].getWeight() < minW.getWeight()){
+                minW = distances[index];
+                minIndex = index;
             }
 		}
-		
 		return minIndex;
 	}
 	
