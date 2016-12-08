@@ -4,8 +4,6 @@ import cs311.hw8.graph.Graph;
 import cs311.hw8.graph.IGraph;
 import cs311.hw8.graph.IGraph.Edge;
 import cs311.hw8.graph.IGraph.Vertex;
-import cs311.hw8.graphalgorithms.OSMMap.Location;
-import cs311.hw8.graphalgorithms.OSMMap.Way;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,24 +26,18 @@ public class GraphAlgorithms{
 	 * @param vertexEnd vertex to end at 
 	 * @return List of edges representing shortest path
 	 */
-	public static <V, E extends Way> List<Edge<E>> ShortestPath(
+	public static <V, E extends IWeight> List<Edge<E>> ShortestPath(
 			IGraph<V, E> g, String vertexStart, String vertexEnd){
 		
 		//Verify g is undirected Dijkstra's, and no edge is negative
 		List<Edge<E>> eList = g.getEdges();
     	try{
-    		checkErrors(g, 2);
-    		for(int i = 0; i < eList.size(); i++){
-        		if(eList.get(i).getEdgeData() == null){
-        			throw new IllegalArgumentException("Contains null edgeData");
-        		}
-        	}
-        	for(int i = 0; i < eList.size(); i++){
-            	if(eList.get(i).getEdgeData().getDistance() < 0){
-            		throw new IllegalArgumentException("Contains negative Distance");
-            	}
-            }
-        
+    		if(!g.isDirectedGraph()){
+    			throw new IllegalArgumentException("Graph must be Directed");
+    		}
+    		if(!checkEdgeData(eList, true)){
+	        	throw new IllegalArgumentException("Graph contains null edge data");
+	        }
     		if(g.getVertex(vertexStart) == null || g.getVertex(vertexEnd) == null){
     			throw new IllegalArgumentException("Vertex does not exist");
     		}
@@ -54,42 +46,58 @@ public class GraphAlgorithms{
     		return null;
     	}
     	
-		List<Vertex<V>> vList = g.getVertices();
+		List<Vertex<V>> vList = g.getVertices(), q = new ArrayList<Vertex<V>>();
+		List<String> vNames = new ArrayList<String>();
 		int size = vList.size();
 		int previous[] = new int[size];
 		boolean included[] = new boolean[size];
 		Weight distances[]  = new Weight[size];
 		List<Edge<E>> shortestPath = new ArrayList<Edge<E>>();
-		Edge<E> e = null;
 		
 		//Fill distances with max doubles and previous with -1 "null" value
 		for(int i = 0; i < size; i++){
 			distances[i] = new Weight(Double.MAX_VALUE);
 			previous[i] = -1;
+			Vertex<V> t = vList.get(i);
+			q.add(t);
+			vNames.add(t.getVertexName());
 		}
 		
 		//Get the starting vertex index and set the distance to that vertex to 0
 		distances[vList.indexOf(g.getVertex(vertexStart))] = new Weight(0);
+		int index, counter = size, test = 0;
 		
-		for(int i = 0; i < size-1; i++){
-			//Find the index of the min distance vertex out of the available neighbors and record the inclusion of that vertex
-			int minIndex = findMinDistance(distances, size, included);
-			included[minIndex] = true;
+		
+		while(counter > 0){
+			index = findMinDistance(distances, size, included);
+			if(index == -1){
+				counter = 0; 
+				break;
+			}
+			String v = vNames.get(index);
+			if(v.equals(vertexEnd))break;
+	
+			included[index] = true;
+			List<Vertex<V>> nList = g.getNeighbors(v);
+			int nSize = nList.size();
 			
-			//loop through all vertices to find the lowest weight edge and add it to the current distance and store the value at the index of the 
-			//vertex in the distances array, and record the previous node in the mst.
-			for(int k = 0; k < size; k++){
-				e = g.getEdge(vList.get(minIndex).getVertexName(), vList.get(k).getVertexName());
-				if(e != null){
-					if(!included[k] && distances[minIndex].getWeight() != Double.MAX_VALUE 
-							&& distances[minIndex].getWeight() + e.getEdgeData().getDistance() < distances[k].getWeight()){
-						distances[k] = new Weight(distances[minIndex].getWeight() + e.getEdgeData().getDistance());
-						previous[k] = minIndex;
-					}
+			for(int k = 0; k < nSize; k++){
+				double alt = distances[index].getWeight() + g.getEdge(v, nList.get(k).getVertexName()).getEdgeData().getWeight();
+				int nIndex = vList.indexOf(nList.get(k));
+				
+				if(alt < distances[nIndex].getWeight()){
+					distances[nIndex] = new Weight(alt);
+					previous[nIndex] = index;
+					test++;
 				}
 			}
+			counter--;
 		}
-		
+		System.out.println(test);
+		//Additional path verification, if final Vertex is never found throw error.
+		if(counter == 0){
+			throw new IllegalArgumentException ("No Path Exists (Counter)");
+		}
 		//get the index of the vertexEnd and vertexStart vertices, then loop through the previous array recording the edges between vertices in the shortestPath list
 		//If the value at previous[currentIndex] is -1 we know that there is not path connecting the two vertices.
 		int currentIndex = vList.indexOf(g.getVertex(vertexEnd)), startI = vList.indexOf(g.getVertex(vertexStart));
@@ -114,13 +122,13 @@ public class GraphAlgorithms{
 	 * @param included boolean array recording what nodes have been added.
 	 * @return
 	 */
-	private static <V,E> int findMinDistance(Weight[] distances, int size, boolean[] included){
+	private static <V,E> int findMinDistance(Weight[] distances, int size, boolean included[]){
 		int minIndex = -1;
 		Weight minW = new Weight(Double.MAX_VALUE);
 		
 		//Loop through the distances array, recording the minimum value that is not included and saving the index.
 		for (int i = 0; i < size; i++){
-            if (included[i] == false && distances[i].getWeight() <= minW.getWeight()){
+            if (!included[i] && distances[i].getWeight() < minW.getWeight()){
                 minW = distances[i];
                 minIndex = i;
             }
@@ -442,7 +450,7 @@ public class GraphAlgorithms{
      * @param type Type of checks to perform, currently supports topological sort check(0), and MST checks(1).
      */
     private static <V, E> void checkErrors(IGraph<V, E> g, int type){
-    	List<Edge<E>> eList = g.getEdges();
+
     	switch(type){
     	//Topological sort check
     	case 0:

@@ -149,7 +149,7 @@ public class JimGraph<V, E> implements IGraph<V, E>
         Vertex<V> v1 = vmap.get(vertexName1);
         Vertex<V> v2 = vmap.get(vertexName2);
         if (v1 == null || v2 == null) throw new NoSuchVertexException();
-        if (!edges.get(v1).containsKey(v2)) throw new NoSuchEdgeException();
+        if (!edges.get(v1).containsKey(v2)) return null;
         return new Edge( vertexName1, vertexName2, edges.get(v1).get(v2));
     }
 
