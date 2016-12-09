@@ -1,6 +1,6 @@
 package cs311.hw8.graphalgorithms;
 
-import cs311.hw8.graph.Graph;
+import cs311.hw8.graph.RayGraph;
 import cs311.hw8.graph.IGraph;
 import cs311.hw8.graph.IGraph.Edge;
 import cs311.hw8.graph.IGraph.Vertex;
@@ -55,6 +55,8 @@ public class GraphAlgorithms{
 		boolean included[] = new boolean[size];
 		Weight distances[]  = new Weight[size];
 		List<Edge<E>> shortestPath = new ArrayList<Edge<E>>();
+		Edge<E> e;
+		double edgeTotal = 0;
 		
 		//Fill distances with max doubles and previous with -1 "null" value
 		for(int i = 0; i < size; i++){
@@ -112,10 +114,15 @@ public class GraphAlgorithms{
 			if(previous[currentIndex] == -1){
 				throw new IllegalArgumentException("No Path Exists");
 			}
-			shortestPath.add(g.getEdge(vList.get(previous[currentIndex]).getVertexName(), vList.get(currentIndex).getVertexName()));
+			e = g.getEdge(vList.get(previous[currentIndex]).getVertexName(), vList.get(currentIndex).getVertexName());
+			shortestPath.add(e);
+			edgeTotal = e.getEdgeData().getWeight() + edgeTotal;
 			//set the working index to be the previous index in the mst.
 			currentIndex = previous[currentIndex];
 		}
+		
+		g.setEdgeTotal(edgeTotal);
+		
 		//Since the edges are stored in reverse in the preceding while loop, we need to reverse the edge order.
 		Collections.reverse(shortestPath);
 		return shortestPath;
@@ -205,7 +212,7 @@ public class GraphAlgorithms{
     	
         List<Vertex<V>> vList = g.getVertices();
     	Queue<Edge<E>> sorted = sort(eList);
-    	Graph<V, E> current = new Graph<V, E>();
+    	RayGraph<V, E> current = new RayGraph<V, E>();
     	Edge<E> edge;
     	Vertex<V> vertex;
     	ArrayList<ArrayList<Vertex<V>>> subsets = new ArrayList<ArrayList<Vertex<V>>>();

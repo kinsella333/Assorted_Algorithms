@@ -4,7 +4,7 @@ import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import cs311.hw8.graph.JimGraph;
+import cs311.hw8.graph.Graph;
 import cs311.hw8.graph.IGraph;
 import cs311.hw8.graph.IGraph.Edge;
 import cs311.hw8.graph.IGraph.Vertex;
@@ -19,6 +19,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Stack;
 
 import javax.xml.parsers.*;
 
@@ -37,7 +38,7 @@ public class OSMMap <V,E> {
 	 * Basic constructor, initializes map and sets it to directed.
 	 */
 	public OSMMap(){
-		map = new JimGraph<Location, Way>();
+		map = new Graph<Location, Way>();
 		map.setDirectedGraph();
 	}
 	
@@ -50,6 +51,7 @@ public class OSMMap <V,E> {
 		List<Location> locList = new ArrayList<Location>();
 		List<String> path = new ArrayList<String>(), pathSn = new ArrayList<String>();
 		double time = System.currentTimeMillis();
+		Location tempLoc;
 		
 		//Grab the MapFile
 		String check = t.parse(args[0]);
@@ -64,10 +66,20 @@ public class OSMMap <V,E> {
 			System.err.println(e);
 			return;
 		}
-		
 		//Get each Location coords and add to list
-		while(in.hasNextLine())locList.add(new Location(in.nextDouble(), in.nextDouble()));
+		while(in.hasNextLine()){
+			tempLoc = new Location(in.nextDouble(), in.nextDouble());
+			
+			locList.add(tempLoc);
+			path.add(t.ClosestRoad(tempLoc));
+		}
 		
+		List<String> TSP = t.ApproximateTSP(path);
+		for(int i = 0; i < TSP.size(); i++){
+			System.out.println(TSP.get(i));
+		}
+		
+		/*
 		//Loop through, collecting shortest route and print all the path's street routes 
 		for(int i = 0; i < locList.size() - 1; i++){
 			path = t.ShortestRoute(locList.get(i), locList.get(i+1));
@@ -77,9 +89,9 @@ public class OSMMap <V,E> {
 				System.out.println("Road: " + pathSn.get(j));
 			}
 			System.out.println("Ending Node: " + path.get(path.size() -1) + "\n");
-		}
+		}*/
+		System.out.println((System.currentTimeMillis()- time)/1000);
 		in.close();
-		System.out.println((System.currentTimeMillis() - time)/1000.0);
 	}
 	
 	/**
@@ -197,6 +209,88 @@ public class OSMMap <V,E> {
 			}
 		}
 		return "";
+	}
+	
+	/**
+	 * Approximation of the traveling sales person problem 
+	 * @param vertices
+	 * @return
+	 */
+	public List<String> ApproximateTSP(List<String> vertices){
+		List<List<Edge<Way>>> paths = new ArrayList<List<Edge<Way>>>();
+		List<String> vOrder = new ArrayList<String>();
+		int size = vertices.size();
+		String tempL;
+		double edgeTotals[][] = new double[size][size];
+		
+		for(int i = 0; i < size; i++){
+			tempL = vertices.get(i);
+			for(int j = 0; j < size; j++){
+				if(i != j){
+					paths.add(GraphAlgorithms.ShortestPath(this.map, tempL, vertices.get(j)));
+					edgeTotals[i][j] = this.map.getEdgeTotal();
+				}
+			}
+		}
+		
+		List<Integer> order = TSPHelper(edgeTotals, size);
+		double edgeTotal = 0;
+		for(int i = 0; i < order.size(); i++){
+			vOrder.add(vertices.get(order.get(i)));
+		}
+	
+		for(int i = 0; i < order.size() - 2; i++){
+			edgeTotal = edgeTotal + edgeTotals[i][i+1];
+		}
+		System.out.println(edgeTotal + "\n\n");
+		return vOrder;
+	}
+	
+	/**
+	 * Helper Function for Approximate TPS, takes in an adjacency matrix, and calculates the mst for the given vertices.
+	 * It then adds the initial vertex to the end of the list.
+	 * 
+	 * @param edgeTotals Total weight of each shortest path from every node to every other.
+	 * @param size Number of vertices to traverse.
+	 * @return Order of nodes to visit.
+	 */
+	private List<Integer> TSPHelper(double edgeTotals[][], int size){
+		boolean visited[] = new boolean[size];
+		List<Integer> out = new ArrayList<Integer>();
+		Stack<Integer> stack = new Stack<Integer>();
+		
+		int index, dst = 0;
+		double min;
+		boolean flag = false;
+		stack.push(0);
+		
+		//While stack has items in it keep looking to add vertex
+		while(!stack.isEmpty()){
+			index = stack.peek();
+			min = Double.MAX_VALUE;
+			
+			//Iterate through and find min distance
+			for(int i = 0; i < size; i++){
+				if(edgeTotals[index][i] > 0 && !visited[i]){
+					if(min > edgeTotals[index][i]){
+						min = edgeTotals[index][i];
+						dst = i;
+						flag = true;
+					}
+				}
+			}
+			//If we found a min push on stack and add to output.
+			if(flag){
+				visited[dst] = true;
+				stack.push(dst);
+				out.add(dst);
+				flag = false;
+			}else{
+				stack.pop();
+			}
+		}
+		out.add(out.get(0));
+		return out;
 	}
 	
 	/**

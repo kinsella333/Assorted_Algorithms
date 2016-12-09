@@ -10,6 +10,9 @@ public interface IGraph<V, E>
      */
     public void setDirectedGraph();
     
+    public double getEdgeTotal();
+    
+    public void setEdgeTotal(double total);
     
     /**
      * Set the graph to be an undirected graph.  Edge (x, y) is in the graph

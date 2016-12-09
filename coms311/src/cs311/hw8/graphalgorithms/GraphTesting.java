@@ -2,7 +2,7 @@ package cs311.hw8.graphalgorithms;
 
 import java.util.List;
 
-import cs311.hw8.graph.Graph;
+import cs311.hw8.graph.RayGraph;
 import cs311.hw8.graph.IGraph.Edge;
 import cs311.hw8.graph.IGraph.Vertex;
 import cs311.hw8.graphalgorithms.OSMMap.Location;
