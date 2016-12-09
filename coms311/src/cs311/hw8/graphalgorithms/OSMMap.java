@@ -33,6 +33,8 @@ import javax.xml.parsers.*;
 public class OSMMap <V,E> {
 	
 	public IGraph<Location, Way> map;
+	public double TSPDist;
+	public List<Integer> TSPOrder;
 	
 	/**
 	 * Basic constructor, initializes map and sets it to directed.
@@ -74,12 +76,19 @@ public class OSMMap <V,E> {
 			path.add(t.ClosestRoad(tempLoc));
 		}
 		
-		List<String> TSP = t.ApproximateTSP(path);
-		for(int i = 0; i < TSP.size(); i++){
-			System.out.println(TSP.get(i));
-		}
 		
-		/*
+		//Formatting output/
+		//-------------------------------------------TSP OUTPUT-------------------------------
+		List<String> TSP = t.ApproximateTSP(path);
+		System.out.println("Approx Traveling Sails Person Path:");
+		for(int i = 0; i < TSP.size(); i++){
+			System.out.println("Node "+ t.TSPOrder.get(i) + " ID: " + TSP.get(i));
+		}
+		System.out.println("Total Distance Traveled: " + Math.round(t.TSPDist*1000.0)/1000.0 + " Miles");
+		
+		//---------------------------------------Shortest Path Output---------------------------------
+		
+		System.out.println("\n-----------------------------------------------------------------------------------\nNormal Shortest Path:");
 		//Loop through, collecting shortest route and print all the path's street routes 
 		for(int i = 0; i < locList.size() - 1; i++){
 			path = t.ShortestRoute(locList.get(i), locList.get(i+1));
@@ -89,8 +98,8 @@ public class OSMMap <V,E> {
 				System.out.println("Road: " + pathSn.get(j));
 			}
 			System.out.println("Ending Node: " + path.get(path.size() -1) + "\n");
-		}*/
-		System.out.println((System.currentTimeMillis()- time)/1000);
+		}
+		System.out.println("\nExecution Time: " + (System.currentTimeMillis()- time)/1000);
 		in.close();
 	}
 	
@@ -222,7 +231,9 @@ public class OSMMap <V,E> {
 		int size = vertices.size();
 		String tempL;
 		double edgeTotals[][] = new double[size][size];
+		double minDist = Double.MAX_VALUE, edgeTotal = 0;
 		
+		//For every node in the input, create a shortest path to every other node, and record the total distance of the path.
 		for(int i = 0; i < size; i++){
 			tempL = vertices.get(i);
 			for(int j = 0; j < size; j++){
@@ -233,16 +244,31 @@ public class OSMMap <V,E> {
 			}
 		}
 		
-		List<Integer> order = TSPHelper(edgeTotals, size);
-		double edgeTotal = 0;
-		for(int i = 0; i < order.size(); i++){
+		//After the paths are found use the helper function to find the order, save the vertices in that order.
+		List<Integer> order = new ArrayList<Integer>();
+		
+		for(int i = 0; i < vertices.size(); i++){
+			order = TSPHelper(edgeTotals, size, i);
+			
+			for(int j = 0; j < order.size() - 1; j++){
+				if(j < order.size() - 2){
+					edgeTotal = edgeTotal + edgeTotals[order.get(j)][order.get(j+1)];
+				}else{
+					edgeTotal = edgeTotal + edgeTotals[order.get(j)][order.get(0)];
+				}
+				
+			}
+			if(edgeTotal < minDist){
+				minDist = edgeTotal;
+				this.TSPOrder = order;
+				this.TSPDist = edgeTotal;
+			}
+			edgeTotal = 0;
+		}
+		
+		for(int i = 0; i < order.size() ; i++){
 			vOrder.add(vertices.get(order.get(i)));
 		}
-	
-		for(int i = 0; i < order.size() - 2; i++){
-			edgeTotal = edgeTotal + edgeTotals[i][i+1];
-		}
-		System.out.println(edgeTotal + "\n\n");
 		return vOrder;
 	}
 	
@@ -254,7 +280,7 @@ public class OSMMap <V,E> {
 	 * @param size Number of vertices to traverse.
 	 * @return Order of nodes to visit.
 	 */
-	private List<Integer> TSPHelper(double edgeTotals[][], int size){
+	private List<Integer> TSPHelper(double edgeTotals[][], int size, int startI){
 		boolean visited[] = new boolean[size];
 		List<Integer> out = new ArrayList<Integer>();
 		Stack<Integer> stack = new Stack<Integer>();
@@ -262,7 +288,7 @@ public class OSMMap <V,E> {
 		int index, dst = 0;
 		double min;
 		boolean flag = false;
-		stack.push(0);
+		stack.push(startI);
 		
 		//While stack has items in it keep looking to add vertex
 		while(!stack.isEmpty()){
